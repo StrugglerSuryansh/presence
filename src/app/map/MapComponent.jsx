@@ -251,7 +251,7 @@ const MapComponent = () => {
               <AlertTitle className="m-0 pt-1">{location.name}</AlertTitle>
               <Badge
                 className="ml-2"
-                style={{ backgroundColor: location.color }}
+                bgColor={location.color}
               >
                 {location.distance.toFixed(3)} km
               </Badge>
