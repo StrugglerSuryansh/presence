@@ -88,7 +88,7 @@ function MainPage() {
                     <AlertTitle className="m-0 pt-1">
                       {entry.location}
                     </AlertTitle>
-                    <Badge className="ml-2">
+                    <Badge className="ml-2" bgColor={"#000000"}>
                       {entry.total_hours} Hrs
                     </Badge>
                   </div>
