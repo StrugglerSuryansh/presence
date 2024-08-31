@@ -11,35 +11,31 @@ const NativeFingerprintCheckin = () => {
     }
 
     try {
+      // Check if the browser supports biometric authentication
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        setCheckinStatus('Biometric authentication is not available on this device.');
+        return;
+      }
+
+      // Create a challenge
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
 
+      // Create public key credential request options
       const publicKeyCredentialRequestOptions = {
         challenge: challenge,
         timeout: 60000,
         userVerification: "required"
       };
 
+      // Request the credential
       const assertion = await navigator.credentials.get({
-        publicKey: {
-          ...publicKeyCredentialRequestOptions,
-          challenge: Uint8Array.from(challenge)
-        }
+        publicKey: publicKeyCredentialRequestOptions
       });
 
       if (assertion) {
-        const res = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(assertion),
-        });
-
-        const result = await res.json();
-        if (result.verified) {
-          setCheckinStatus('Checked in successfully!');
-        } else {
-          setCheckinStatus('Check-in failed. Please try again.');
-        }
+        setCheckinStatus('Checked in successfully!');
       } else {
         setCheckinStatus('Check-in failed. Please try again.');
       }
