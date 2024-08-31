@@ -117,6 +117,7 @@ const handler = NextAuth({
                 name: profile.name || existingUser.name,
                 image: profile.picture || profile.avatar_url || existingUser.image,
                 isOAuth: true,
+                role: existingUser.role,
               },
             }
           );
