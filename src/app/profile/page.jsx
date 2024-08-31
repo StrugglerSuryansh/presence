@@ -40,7 +40,7 @@ const page = () => {
               <AlertTitle className="m-0 pt-1">Name</AlertTitle>
               <Badge
                 className="ml-2"
-                style={{ backgroundColor: location.color }}
+                bgColor={"#000"}
               >
                 {session?.user?.name}
               </Badge>
@@ -55,6 +55,8 @@ const page = () => {
               <AlertTitle className="m-0 pt-1">Email</AlertTitle>
               <Badge
                 className="ml-2"
+                bgColor={"#000"}
+
               >
                 {session?.user?.email}
               </Badge>
@@ -68,7 +70,7 @@ const page = () => {
               <AlertTitle className="m-0 pt-1">Role</AlertTitle>
               <Badge
                 className="ml-2 bg-red-600"
-                style={{ backgroundColor: location.color }}
+                bgColor={"#000"}
               >
                 {session?.user?.role}
               </Badge>
@@ -82,7 +84,7 @@ const page = () => {
               <AlertTitle className="m-0 pt-1">ID</AlertTitle>
               <Badge
                 className="ml-2"
-                style={{ backgroundColor: location.color }}
+                bgColor={"#000"}
               >
                 {session?.user?.id}
               </Badge>

@@ -113,7 +113,7 @@ const geofencingLocations = [
 ];
 
 const MapComponent = () => {
-  const [position, setPosition] = useState([37.7749, -122.4194]); // Default to San Francisco
+  const [position, setPosition] = useState([28.9813173,77.7337516]); // Default to San Francisco
   const [initialPositionSet, setInitialPositionSet] = useState(false);
   const [nearestLocations, setNearestLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -200,6 +200,7 @@ const MapComponent = () => {
     }
     setSelectedLocation(location);
   };
+
 
   return (
     <>
