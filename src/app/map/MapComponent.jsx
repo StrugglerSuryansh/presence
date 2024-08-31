@@ -6,6 +6,8 @@ import L from "leaflet";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useSession } from "next-auth/react";
+
 
 const LocationMarker = ({ position }) => (
   <Marker
@@ -20,7 +22,7 @@ const LocationMarker = ({ position }) => (
         border: 1px solid white;
         box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
       ">
-        <img src="https://avatars.githubusercontent.com/u/44896539?v=4" style="width: 100%; height: 100%; object-fit: cover;" />
+        <img src="${session?.user?.image}" style="width: 100%; height: 100%; object-fit: cover;" />
       </div>`,
       iconSize: [40, 40],
       iconAnchor: [20, 40],
@@ -36,81 +38,7 @@ const CenterMapOnLocation = ({ position }) => {
   return null;
 };
 
-// Example geofencing data
-const geofencingLocations = [
-  {
-    id: 1,
-    name: "Downtown",
-    lat: 37.7749,
-    lng: -122.4194,
-    radius: 200,
-    color: "#FF5733",
-  },
-  {
-    id: 2,
-    name: "Financial District",
-    lat: 37.7847,
-    lng: -122.409,
-    radius: 150,
-    color: "#33FF57",
-  },
-  {
-    id: 3,
-    name: "Golden Gate Park",
-    lat: 37.7694,
-    lng: -122.4862,
-    radius: 300,
-    color: "#3357FF",
-  },
-  {
-    id: 4,
-    name: "Fisherman's Wharf",
-    lat: 37.808,
-    lng: -122.4177,
-    radius: 180,
-    color: "#FF33E9",
-  },
-  {
-    id: 5,
-    name: "Mission District",
-    lat: 37.7599,
-    lng: -122.4148,
-    radius: 250,
-    color: "#33FFF6",
-  },
-  {
-    id: 6,
-    name: "Chinatown",
-    lat: 37.7941,
-    lng: -122.4078,
-    radius: 120,
-    color: "#FFB733",
-  },
-  {
-    id: 7,
-    name: "Admin Block",
-    lat: 28.972765,
-    lng: 77.641369,
-    radius: 40,
-    color: "#FF5733",
-  },
-  {
-    id: 8,
-    name: "MIET Canteen",
-    lat: 28.972845,
-    lng: 77.639962,
-    radius: 80,
-    color: "#FF5733",
-  },
-  {
-    id: 9,
-    name: "M-Block",
-    lat: 28.974401,
-    lng: 77.638944,
-    radius: 100,
-    color: "#FF5733",
-  },
-];
+
 
 const MapComponent = () => {
   const [position, setPosition] = useState([28.9813173,77.7337516]); // Default to San Francisco
@@ -118,6 +46,8 @@ const MapComponent = () => {
   const [nearestLocations, setNearestLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const mapRef = useRef(null);
+  const { data: session, status } = useSession();
+
 
   const [geofences, setGeofences] = useState([]);
 
