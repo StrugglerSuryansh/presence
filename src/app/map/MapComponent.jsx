@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { useSession } from "next-auth/react";
 
 
-const LocationMarker = ({ position }) => (
+const LocationMarker = ({ position, session }) => (
+  
   <Marker
     position={position}
     icon={L.divIcon({
@@ -154,7 +155,7 @@ const MapComponent = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution=""
         />
-        <LocationMarker position={position} />
+        <LocationMarker position={position} session={session} />
         {nearestLocations.map((location) => (
           <Circle
             key={location.id}

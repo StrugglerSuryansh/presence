@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import MainDock from "@/components/home/Dock";
 import AdminDock from "@/components/home/Admindock";
 
+
 function MainPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [attendanceData, setAttendanceData] = useState(null);

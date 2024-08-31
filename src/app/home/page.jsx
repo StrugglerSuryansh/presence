@@ -67,21 +67,21 @@ export default function HomePage() {
         console.log("No current position or geofences available");
         return;
       }
-  
+
       console.log("Checking geofence with position:", currentPosition);
       console.log("Available geofences:", geofences);
-  
-      const insideGeofence = geofences.find(fence => 
+
+      const insideGeofence = geofences.find((fence) =>
         isInsideGeofence(currentPosition, fence)
       );
-  
+
       console.log("Inside geofence:", insideGeofence);
       setCurrentGeofence(insideGeofence || null);
     };
-  
+
     checkGeofence();
   }, [currentPosition, geofences]);
-  
+
   // const isInsideGeofence = (position, fence) => {
   //   if (!position || !fence) {
   //     console.log("Invalid position or fence");
@@ -96,25 +96,32 @@ export default function HomePage() {
   //   console.log(`Distance to ${fence.name}: ${distance} meters, Radius: ${fence.radius} meters`);
   //   return distance <= fence.radius;
   // };
-  
 
   console.log("Current Position: ", currentPosition);
   console.log("Current Geofence: ", currentGeofence);
-
 
   // Fetch initial check-in status and times
   useEffect(() => {
     const fetchInitialStatus = async () => {
       try {
-        const checkinResponse = await fetch(`/api/attendance/get-checkin?email=${session?.user?.email}`);
+        const checkinResponse = await fetch(
+          `/api/attendance/get-checkin?email=${session?.user?.email}`
+        );
         const checkinData = await checkinResponse.json();
-        const checkoutResponse = await fetch(`/api/attendance/get-checkout?email=${session?.user?.email}`);
+        const checkoutResponse = await fetch(
+          `/api/attendance/get-checkout?email=${session?.user?.email}`
+        );
         const checkoutData = await checkoutResponse.json();
 
         if (checkinResponse.ok && checkoutResponse.ok) {
           setCheckinTime(checkinData.latestCheckin);
           setCheckoutTime(checkoutData.latestCheckout);
-          setIsCheckedIn(checkinData.latestCheckin && (!checkoutData.latestCheckout || new Date(checkinData.latestCheckin) > new Date(checkoutData.latestCheckout)));
+          setIsCheckedIn(
+            checkinData.latestCheckin &&
+              (!checkoutData.latestCheckout ||
+                new Date(checkinData.latestCheckin) >
+                  new Date(checkoutData.latestCheckout))
+          );
         } else {
           throw new Error("Failed to fetch check-in/out times");
         }
@@ -148,11 +155,12 @@ export default function HomePage() {
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
     const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2); // a = sin²(Δφ/2) + cos(φ1).cos(φ2).sin²(Δλ/2)
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2); // a = sin²(Δφ/2) + cos(φ1).cos(φ2).sin²(Δλ/2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // c = 2.atan2(√a, √(1−a))
     const d = R * c; // d = R.c
     return d;
-
   };
 
   const handleCheckIn = async () => {
@@ -224,7 +232,7 @@ export default function HomePage() {
   const handleManualAction = async () => {
     console.log("Current geofence:", currentGeofence);
     console.log("Is checked in:", isCheckedIn);
-  
+
     if (isCheckedIn) {
       await handleCheckOut();
     } else if (currentGeofence) {
@@ -238,7 +246,9 @@ export default function HomePage() {
   useEffect(() => {
     const fetchLeaves = async () => {
       try {
-        const response = await fetch(`/api/attendance/get-leaves?email=${session?.user?.email}`);
+        const response = await fetch(
+          `/api/attendance/get-leaves?email=${session?.user?.email}`
+        );
         const data = await response.json();
         if (response.ok) {
           setLeaves(data.remainingLeaves);
@@ -263,9 +273,14 @@ export default function HomePage() {
           const currentYear = new Date().getFullYear();
           const filteredHistory = data.data.history.filter((record) => {
             const recordDate = new Date(record.date);
-            return recordDate.getMonth() + 1 === currentMonth && recordDate.getFullYear() === currentYear;
+            return (
+              recordDate.getMonth() + 1 === currentMonth &&
+              recordDate.getFullYear() === currentYear
+            );
           });
-          const uniqueDates = new Set(filteredHistory.map((record) => record.date));
+          const uniqueDates = new Set(
+            filteredHistory.map((record) => record.date)
+          );
           setWorkingDays(uniqueDates.size);
         } else {
           throw new Error(data.message || "Failed to fetch attendance");
@@ -299,15 +314,20 @@ export default function HomePage() {
   // }
 
   const formatTime = (time) => {
-    return time ? new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+    return time
+      ? new Date(time).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "--:--";
   };
 
   //write a function to get the todays date in month day, year format
-   const getTodaysDate = () => {
-     const date = new Date();
-     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-     return date.toLocaleDateString(undefined, options); 
-   };
+  const getTodaysDate = () => {
+    const date = new Date();
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return date.toLocaleDateString(undefined, options);
+  };
 
   return (
     <div className="w-full min-h-screen dark:bg-black bg-white  dark:bg-grid-small-white/[0.2] bg-grid-small-black/[0.2]">
