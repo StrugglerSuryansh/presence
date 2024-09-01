@@ -412,7 +412,7 @@ export default function Globe() {
             y: 0,
           }}
           transition={{
-            duration: 1,
+            duration: 0,
           }}
           className="text-center"
         >

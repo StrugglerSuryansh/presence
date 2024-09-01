@@ -10,8 +10,9 @@ import { NotepadText, LogIn, LogOut } from "lucide-react";
 import Image from "next/image";
 import AnimatedShinyText from "@/components/magicui/animated-shiny-text";
 import { cn } from "@/lib/utils";
-import { set } from "mongoose";
 import Loader from "./loader";
+import { AlertCheckin } from "@/components/home/ManualAlert";
+import { FaceAlert } from "@/components/home/FaceAlert";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -139,6 +140,12 @@ export default function HomePage() {
     }
   }, [session]);
 
+  console.log("Checked in:", checkoutTime);
+
+  const handleRefresh = () => {
+    fetchLatestAttendanceData();
+  };
+
   const isInsideGeofence = (position, fence) => {
     const distance = calculateDistance(
       position.latitude,
@@ -167,6 +174,72 @@ export default function HomePage() {
     return d;
   };
 
+  const fetchLatestAttendanceData = async () => {
+    try {
+      const checkinResponse = await fetch(
+        `/api/attendance/get-checkin?email=${session?.user?.email}`
+      );
+      const checkinData = await checkinResponse.json();
+      const checkoutResponse = await fetch(
+        `/api/attendance/get-checkout?email=${session?.user?.email}`
+      );
+      const checkoutData = await checkoutResponse.json();
+      console.log("Checkin data:", checkoutData);
+
+      if (checkinResponse.ok && checkoutResponse.ok) {
+        setCheckinTime(checkinData.latestCheckin);
+        setCheckoutTime(checkoutData.latestCheckout);
+        setIsCheckedIn(
+          checkinData.latestCheckin &&
+            (!checkoutData.latestCheckout ||
+              new Date(checkinData.latestCheckin) >
+                new Date(checkoutData.latestCheckout))
+        );
+      } else {
+        throw new Error("Failed to fetch latest attendance data");
+      }
+
+      // Fetch updated working days
+      const attendanceResponse = await fetch("/api/attendance/get-by-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: session?.user?.email }),
+      });
+      const attendanceData = await attendanceResponse.json();
+      if (attendanceResponse.ok && attendanceData.success) {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        const filteredHistory = attendanceData.data.history.filter((record) => {
+          const recordDate = new Date(record.date);
+          return (
+            recordDate.getMonth() + 1 === currentMonth &&
+            recordDate.getFullYear() === currentYear
+          );
+        });
+        const uniqueDates = new Set(
+          filteredHistory.map((record) => record.date)
+        );
+        setWorkingDays(uniqueDates.size);
+      }
+    } catch (err) {
+      setError("Failed to fetch latest attendance data: " + err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (checkinTime === null && checkoutTime === null) {
+      setIsCheckedIn(false);
+    }
+    if (checkinTime !== null && checkoutTime === null) {
+      setIsCheckedIn(true);
+    }
+    if (checkinTime !== null && checkoutTime !== null) {
+      setIsCheckedIn(false);
+    }
+  }, [checkinTime, checkoutTime]);
+
+  console.log("oapa", isCheckedIn);
+
   const handleCheckIn = async () => {
     if (isCheckedIn) {
       console.log("Already checked in");
@@ -184,10 +257,9 @@ export default function HomePage() {
       });
       const result = await response.json();
       if (result.success) {
-        setIsCheckedIn(true);
-        setCheckoutTime(null);
-        setCheckinTime(new Date().toISOString());
         console.log(`Checked in to ${currentGeofence.name}`);
+        // Fetch the latest attendance data after successful check-in
+        await fetchLatestAttendanceData();
       } else {
         throw new Error(result.message);
       }
@@ -212,9 +284,9 @@ export default function HomePage() {
       });
       const result = await response.json();
       if (result.success) {
-        setIsCheckedIn(false);
-        setCheckoutTime(new Date().toISOString());
         console.log("Checked out successfully");
+        // Fetch the latest attendance data after successful check-out
+        await fetchLatestAttendanceData();
       } else {
         throw new Error(result.message);
       }
@@ -329,23 +401,6 @@ export default function HomePage() {
 
   console.log("nearestLocations: ", nearestLocations[0]);
 
-  //   console.log("Checkin Time: ", checkinTime);
-  //   console.log("Checkout Time: ", checkoutTime);
-  //   console.log("Leaves: ", leaves);
-  //   console.log("Working Days: ", workingDays);
-  // console.log("Current Position: ", currentPosition);
-  //   console.log("Error: ", error);
-  //   console.log("Is Checked In: ", isCheckedIn);
-  console.log("distance: ", distance);
-  //   console.log("Current Geofence: ", currentGeofence);
-  //   console.log('Latitude:', currentPosition?.latitude);
-  // console.log('Longitude:', currentPosition?.longitude);
-  console.log("Geofence data: ", geofences[1]);
-
-  // if(checkinTime){
-  //   setCheckinTime(true);
-  // }
-
   const formatTime = (time) => {
     return time
       ? new Date(time).toLocaleTimeString("en-GB", {
@@ -361,15 +416,22 @@ export default function HomePage() {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return date.toLocaleDateString(undefined, options);
   };
-
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const fetchTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // Stop loading after 3 seconds, regardless of workingDays
+
+    const fetchCheckTimer = setTimeout(() => {
       if (workingDays) {
+        clearTimeout(fetchTimeout); // Clear the 3-second timeout if workingDays is fetched
         setIsLoading(false);
       }
-    }, 1000);
+    }, 1000); // Check after 1 second if workingDays are fetched
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(fetchCheckTimer);
+      clearTimeout(fetchTimeout); // Clear both timeouts on component unmount
+    };
   }, [workingDays]);
 
   useEffect(() => {
@@ -482,12 +544,19 @@ export default function HomePage() {
             </Card>
           </div>
 
-          <CheckInOutButton
-            isCheckedIn={isCheckedIn}
-            handleCheckIn={handleManualAction}
-            handleCheckOut={handleManualAction}
-          />
           <div></div>
+          {isInside ? (
+            !isCheckedIn ? (
+              <FaceAlert handel={handleCheckIn} onClick={handleRefresh} />
+            ) : (
+              <CheckInOutButton
+                onClick={handleRefresh}
+                handleCheckOut={handleCheckOut}
+              />
+            )
+          ) : (
+            <AlertCheckin pata_nahi={handleCheckIn} onClick={handleRefresh} />
+          )}
 
           {!workingDays && session?.user?.role === "admin" ? (
             <AdminDock />
