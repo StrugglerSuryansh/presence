@@ -11,6 +11,7 @@ import Image from "next/image";
 import AnimatedShinyText from "@/components/magicui/animated-shiny-text";
 import { cn } from "@/lib/utils";
 import { set } from "mongoose";
+import Loader from "./loader";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -24,6 +25,9 @@ export default function HomePage() {
   const [geofences, setGeofences] = useState([]);
   const [currentGeofence, setCurrentGeofence] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [nearestLocations, setNearestLocations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInside, setIsInside] = useState(false);
 
   // Fetch geofences on component mount
 
@@ -296,6 +300,35 @@ export default function HomePage() {
     }
   }, [session]);
 
+  useEffect(() => {
+    console.log(
+      "Calculating distances. Position:",
+      currentPosition,
+      "Geofences:",
+      geofences
+    );
+    const locationsWithDistance = geofences.map((loc) => {
+      const distance = calculateDistance(
+        currentPosition?.latitude,
+        currentPosition?.longitude,
+        loc.lat,
+        loc.lng
+      );
+      console.log(`Distance for ${loc.name}:`, distance);
+      return {
+        ...loc,
+        distance,
+      };
+    });
+    console.log("Locations with distances:", locationsWithDistance);
+    const sortedLocations = locationsWithDistance.sort(
+      (a, b) => a.distance - b.distance
+    );
+    setNearestLocations(sortedLocations.slice(0, 5));
+  }, [currentPosition, geofences]);
+
+  console.log("nearestLocations: ", nearestLocations[0]);
+
   //   console.log("Checkin Time: ", checkinTime);
   //   console.log("Checkout Time: ", checkoutTime);
   //   console.log("Leaves: ", leaves);
@@ -329,112 +362,170 @@ export default function HomePage() {
     return date.toLocaleDateString(undefined, options);
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (workingDays) {
+        setIsLoading(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [workingDays]);
+
+  useEffect(() => {
+    if (nearestLocations[0]?.distance <= nearestLocations[0]?.radius) {
+      setIsInside(true);
+    }
+  }, [nearestLocations]);
+
   return (
     <div className="w-full min-h-screen dark:bg-black bg-white  dark:bg-grid-small-white/[0.2] bg-grid-small-black/[0.2]">
-      <div className="flex items-center flex-col justify-center">
-        <div className="flex items-center space-x-4 mt-8 pr-16 mr-2">
-          {/* Profile Image */}
-          <Image
-            src={session?.user?.image}
-            width={60}
-            height={60}
-            alt="user"
-            className="rounded-full"
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="flex items-center flex-col justify-center">
+          <div className="flex items-center space-x-4 mt-8 pr-16 mr-2">
+            {/* Profile Image */}
+            <Image
+              src={session?.user?.image}
+              width={60}
+              height={60}
+              alt="user"
+              className="rounded-full"
+            />
+
+            {/* User Info */}
+            <div className="flex flex-col justify-start">
+              <h1 className="text-lg font-semibold">{session?.user?.name}</h1>
+              <span className="text-sm text-gray-500">{getTodaysDate()}</span>
+            </div>
+          </div>
+
+          <div className="z-10 flex mt-4 items-center justify-center">
+            <div
+              className={cn(
+                "group rounded-full border border-black/5 bg-neutral-100 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+              )}
+            >
+              <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
+                <span>✨ Today's Attendance</span>
+              </AnimatedShinyText>
+            </div>
+          </div>
+
+          <div className="items-center justify-center"></div>
+          {/* <SwipeButton onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} /> */}
+          <div className="grid grid-cols-2 gap-4 my-4">
+            <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
+              <div id="checkin" className="flex flex-col">
+                <div className="flex flex-row gap-1 mt-4">
+                  <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
+                    <LogIn className="text-[#108e6a]" size={20} />
+                  </div>
+                  <div className="flex justify-center items-center">
+                    <span className="text-[1.06rem] font-semibold">
+                      Check In
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 pl-0">
+                  <span className="text-3xl border-l-8 border-green-500 pl-2 text-green-600">
+                    {/* {checkinTime || "--:--"} */}
+                    {formatTime(checkinTime)}
+                  </span>
+                </div>
+              </div>
+            </Card>
+            <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
+              <div id="checkin" className="flex flex-col">
+                <div className="flex flex-row gap-1 mt-4">
+                  <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
+                    <LogOut className="text-[#108e6a]" size={20} />
+                  </div>
+                  <div className="flex justify-center items-center">
+                    <span className="text-[1.06rem] font-semibold">
+                      Check Out
+                    </span>
+                    <br></br>
+                    <span></span>
+                  </div>
+                </div>
+                <div className="p-4 pl-0">
+                  <span className="text-3xl border-l-8 border-red-500 text-red-600 pl-2">
+                    {/* {checkoutTime || "--:--"} */}
+                    {formatTime(checkoutTime)}
+                  </span>
+                </div>
+              </div>
+            </Card>
+            <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
+              <div id="checkin" className="flex flex-col">
+                <div className="flex flex-row gap-1 mt-4">
+                  <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
+                    <NotepadText className="text-[#108e6a]" size={20} />
+                  </div>
+                  <div className="flex justify-center items-center">
+                    <span className="text-[1.03rem] font-semibold">
+                      Work Days
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 pl-0">
+                  <span className="text-[1.39rem] border-l-8 border-blue-500 pl-2 text-blue-600">
+                    {workingDays} Days
+                  </span>
+                </div>
+              </div>
+            </Card>
+            <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
+              <EmployeeLeavesGauge remainingLeaves={leaves} />
+            </Card>
+          </div>
+
+          <CheckInOutButton
+            isCheckedIn={isCheckedIn}
+            handleCheckIn={handleManualAction}
+            handleCheckOut={handleManualAction}
           />
+          <div></div>
 
-          {/* User Info */}
-          <div className="flex flex-col justify-start">
-            <h1 className="text-lg font-semibold">{session?.user?.name}</h1>
-            <span className="text-sm text-gray-500">{getTodaysDate()}</span>
-          </div>
+          {!workingDays && session?.user?.role === "admin" ? (
+            <AdminDock />
+          ) : (
+            <MainDock />
+          )}
+          {isInside
+            ? InsideGeofence(nearestLocations[0]?.name)
+            : OutsideGeofence(nearestLocations[0]?.name)}
         </div>
+      )}
+    </div>
+  );
+}
 
-        <div className="z-10 flex mt-4 items-center justify-center">
-          <div
-            className={cn(
-              "group rounded-full border border-black/5 bg-neutral-100 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800"
-            )}
-          >
-            <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
-              <span>✨ Today's Attendance</span>
-            </AnimatedShinyText>
-          </div>
-        </div>
+function OutsideGeofence(nearestLocation) {
+  return (
+    <div className="flex items-center justify-center h-4">
+      <div className="flex items-center mt-8 text-xs">
+        <span className="text-red-600 mb-8 font-extrabold text-6xl">.</span>
+        <h4 className="text-red-400">
+          Outide of GeoFencing, nearest site is{" "}
+          <span className="text-red-700 font-bold">{nearestLocation}</span>
+        </h4>
+      </div>
+    </div>
+  );
+}
 
-        <div className="items-center justify-center"></div>
-        {/* <SwipeButton onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} /> */}
-        <div className="grid grid-cols-2 gap-4 my-4">
-          <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
-            <div id="checkin" className="flex flex-col">
-              <div className="flex flex-row gap-1 mt-4">
-                <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
-                  <LogIn className="text-[#108e6a]" size={20} />
-                </div>
-                <div className="flex justify-center items-center">
-                  <span className="text-[1.06rem] font-semibold">Check In</span>
-                </div>
-              </div>
-              <div className="p-4 pl-0">
-                <span className="text-3xl border-l-8 border-green-500 pl-2 text-green-600">
-                  {/* {checkinTime || "--:--"} */}
-                  {formatTime(checkinTime)}
-                </span>
-              </div>
-            </div>
-          </Card>
-          <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
-            <div id="checkin" className="flex flex-col">
-              <div className="flex flex-row gap-1 mt-4">
-                <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
-                  <LogOut className="text-[#108e6a]" size={20} />
-                </div>
-                <div className="flex justify-center items-center">
-                  <span className="text-[1.06rem] font-semibold">
-                    Check Out
-                  </span>
-                  <br></br>
-                  <span></span>
-                </div>
-              </div>
-              <div className="p-4 pl-0">
-                <span className="text-3xl border-l-8 border-red-500 text-red-600 pl-2">
-                  {/* {checkoutTime || "--:--"} */}
-                  {formatTime(checkoutTime)}
-                </span>
-              </div>
-            </div>
-          </Card>
-          <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
-            <div id="checkin" className="flex flex-col">
-              <div className="flex flex-row gap-1 mt-4">
-                <div className="flex justify-center items-center bg-[#00bf898b] p-1 rounded">
-                  <NotepadText className="text-[#108e6a]" size={20} />
-                </div>
-                <div className="flex justify-center items-center">
-                  <span className="text-[1.03rem] font-semibold">
-                    Work Days
-                  </span>
-                </div>
-              </div>
-              <div className="p-4 pl-0">
-                <span className="text-[1.39rem] border-l-8 border-blue-500 pl-2 text-blue-600">
-                  {workingDays} Days
-                </span>
-              </div>
-            </div>
-          </Card>
-          <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
-            <EmployeeLeavesGauge remainingLeaves={leaves} />
-          </Card>
-        </div>
-
-        <CheckInOutButton
-          isCheckedIn={isCheckedIn}
-          handleCheckIn={handleManualAction}
-          handleCheckOut={handleManualAction}
-        />
-
-        {session?.user?.role === "admin" ? <AdminDock /> : <MainDock />}
+function InsideGeofence(nearestLocation) {
+  return (
+    <div className="flex items-center justify-center h-4">
+      <div className="flex items-center mt-8 text-xs">
+        <span className="text-green-600 mb-8 font-extrabold text-6xl">.</span>
+        <h4 className="text-green-500">
+          Inside of GeoFencing, current site is{" "}
+          <span className="text-green-700 font-bold">{nearestLocation}</span>
+        </h4>
       </div>
     </div>
   );

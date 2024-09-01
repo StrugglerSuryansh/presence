@@ -4,11 +4,11 @@ import { Dock, DockIcon } from "@/components/magicui/dock";
 
 function MainDock() {
   return (
-    <div className="flex flex-col justify-end z-50">
+    <div className="flex flex-col justify-end z-0">
       <Dock
         magnification={40}
         distance={100}
-        className="fixed bottom-4 left-0 right-0 space-x-2 md:scale-110 px-4"
+        className="fixed bottom-4 left-0 right-0 space-x-2 md:scale-110 px-4 z-20"
       >
         <DockIcon className="bg-black/10 dark:bg-white/10 p-3">
           <Link href={"/home"}>
