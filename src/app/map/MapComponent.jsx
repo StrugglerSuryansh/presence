@@ -42,7 +42,7 @@ const CenterMapOnLocation = ({ position }) => {
 
 
 const MapComponent = () => {
-  const [position, setPosition] = useState([28.9813173,77.7337516]); // Default to San Francisco
+  const [position, setPosition] = useState([28.9813173,77.7337516]); 
   const [initialPositionSet, setInitialPositionSet] = useState(false);
   const [nearestLocations, setNearestLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
