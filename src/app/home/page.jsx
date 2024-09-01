@@ -361,15 +361,22 @@ export default function HomePage() {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return date.toLocaleDateString(undefined, options);
   };
-
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const fetchTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // Stop loading after 3 seconds, regardless of workingDays
+  
+    const fetchCheckTimer = setTimeout(() => {
       if (workingDays) {
+        clearTimeout(fetchTimeout); // Clear the 3-second timeout if workingDays is fetched
         setIsLoading(false);
       }
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    }, 1000); // Check after 1 second if workingDays are fetched
+  
+    return () => {
+      clearTimeout(fetchCheckTimer);
+      clearTimeout(fetchTimeout); // Clear both timeouts on component unmount
+    };
   }, [workingDays]);
 
   useEffect(() => {
