@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import Loader from "./loader";
 import { AlertCheckin } from "@/components/home/ManualAlert";
 import { FaceAlert } from "@/components/home/FaceAlert";
+import { current } from "tailwindcss/colors";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -305,6 +306,8 @@ export default function HomePage() {
   //   }
   // };
 
+  console.log("Current geofence:", currentGeofence);
+
   const handleManualAction = async () => {
     console.log("Current geofence:", currentGeofence);
     console.log("Is checked in:", isCheckedIn);
@@ -545,17 +548,17 @@ export default function HomePage() {
           </div>
 
           <div></div>
-          {isInside ? (
-            !isCheckedIn ? (
-              <FaceAlert handel={handleCheckIn} onClick={handleRefresh} />
+          {!isCheckedIn ? (
+            currentGeofence ? (
+              <FaceAlert handel={handleManualAction} onClick={handleRefresh} />
             ) : (
-              <CheckInOutButton
-                onClick={handleRefresh}
-                handleCheckOut={handleCheckOut}
-              />
+              <AlertCheckin pata_nahi={handleManualAction} onClick={handleRefresh} />
             )
           ) : (
-            <AlertCheckin pata_nahi={handleCheckIn} onClick={handleRefresh} />
+            <CheckInOutButton
+              onClick={handleRefresh}
+              handleCheckOut={handleCheckOut}
+            />
           )}
 
           {!workingDays && session?.user?.role === "admin" ? (
@@ -564,8 +567,8 @@ export default function HomePage() {
             <MainDock />
           )}
           {isInside
-            ? InsideGeofence(nearestLocations[0]?.name)
-            : OutsideGeofence(nearestLocations[0]?.name)}
+            ? InsideGeofence(currentGeofence?.name)
+            : OutsideGeofence(currentGeofence?.name)}
         </div>
       )}
     </div>
