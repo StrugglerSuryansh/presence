@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "xyz.devxoshakya.presence",
+        "sha256_cert_fingerprints": ["39:6B:79:AA:3A:56:0E:63:5D:89:EE:D9:E3:2B:C7:00:51:C4:56:CA:78:20:D8:D1:23:F4:37:DD:F3:33:26:FF"]
+      }
+    }]
