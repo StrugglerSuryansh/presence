@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import Loader from "./loader";
 import { AlertCheckin } from "@/components/home/ManualAlert";
 import { FaceAlert } from "@/components/home/FaceAlert";
-import { current } from "tailwindcss/colors";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -31,9 +30,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInside, setIsInside] = useState(false);
 
-  // Fetch geofences on component mount
-
-  // Fetch geofences on component mount
   useEffect(() => {
     const fetchGeofences = async () => {
       try {
@@ -49,7 +45,9 @@ export default function HomePage() {
     fetchGeofences();
   }, []);
 
-  // Watch position and update currentPosition
+  const handelSignOut = () => {
+    signOut();
+  }
   useEffect(() => {
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -66,7 +64,6 @@ export default function HomePage() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // Check if user is in a geofence whenever position or geofences change
   useEffect(() => {
     const checkGeofence = () => {
       if (!currentPosition || geofences.length === 0) {
@@ -88,25 +85,10 @@ export default function HomePage() {
     checkGeofence();
   }, [currentPosition, geofences]);
 
-  // const isInsideGeofence = (position, fence) => {
-  //   if (!position || !fence) {
-  //     console.log("Invalid position or fence");
-  //     return false;
-  //   }
-  //   const distance = calculateDistance(
-  //     position.latitude,
-  //     position.longitude,
-  //     fence.lat,
-  //     fence.lng
-  //   );
-  //   console.log(`Distance to ${fence.name}: ${distance} meters, Radius: ${fence.radius} meters`);
-  //   return distance <= fence.radius;
-  // };
 
   console.log("Current Position: ", currentPosition);
   console.log("Current Geofence: ", currentGeofence);
 
-  // Fetch initial check-in status and times
   useEffect(() => {
     const fetchInitialStatus = async () => {
       try {
@@ -160,7 +142,6 @@ export default function HomePage() {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    // ... (keeping the existing calculateDistance function)
     const R = 6371e3; // metres
     const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
     const φ2 = (lat2 * Math.PI) / 180;
@@ -259,7 +240,6 @@ export default function HomePage() {
       const result = await response.json();
       if (result.success) {
         console.log(`Checked in to ${currentGeofence.name}`);
-        // Fetch the latest attendance data after successful check-in
         await fetchLatestAttendanceData();
       } else {
         throw new Error(result.message);
@@ -296,15 +276,6 @@ export default function HomePage() {
     }
   };
 
-  // const handleManualAction = async () => {
-  //   if (isCheckedIn) {
-  //     await handleCheckOut();
-  //   } else if (currentGeofence) {
-  //     await handleCheckIn();
-  //   } else {
-  //     alert("You can only check in if you are inside a geofenced area.");
-  //   }
-  // };
 
   console.log("Current geofence:", currentGeofence);
 
@@ -317,7 +288,7 @@ export default function HomePage() {
     } else if (currentGeofence) {
       await handleCheckIn();
     } else {
-      alert("You can only check in if you are inside a geofenced area.");
+      alert("Your request will be reviewed by the admin.");
     }
   };
 
@@ -429,7 +400,7 @@ export default function HomePage() {
         clearTimeout(fetchTimeout); // Clear the 3-second timeout if workingDays is fetched
         setIsLoading(false);
       }
-    }, 1000); // Check after 1 second if workingDays are fetched
+    }, 2000); // Check after 1 second if workingDays are fetched
 
     return () => {
       clearTimeout(fetchCheckTimer);
@@ -450,16 +421,15 @@ export default function HomePage() {
       ) : (
         <div className="flex items-center flex-col justify-center">
           <div className="flex items-center space-x-4 mt-8 pr-16 mr-2">
-            {/* Profile Image */}
             <Image
               src={session?.user?.image}
               width={60}
               height={60}
               alt="user"
               className="rounded-full"
+              onClick={handelSignOut}
             />
 
-            {/* User Info */}
             <div className="flex flex-col justify-start">
               <h1 className="text-lg font-semibold">{session?.user?.name}</h1>
               <span className="text-sm text-gray-500">{getTodaysDate()}</span>
@@ -479,7 +449,6 @@ export default function HomePage() {
           </div>
 
           <div className="items-center justify-center"></div>
-          {/* <SwipeButton onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} /> */}
           <div className="grid grid-cols-2 gap-4 my-4">
             <Card className="mt-2 !bg-white h-[9.5rem] w-[9.5rem]">
               <div id="checkin" className="flex flex-col">
@@ -495,7 +464,6 @@ export default function HomePage() {
                 </div>
                 <div className="p-4 pl-0">
                   <span className="text-3xl border-l-8 border-green-500 pl-2 text-green-600">
-                    {/* {checkinTime || "--:--"} */}
                     {formatTime(checkinTime)}
                   </span>
                 </div>
@@ -517,7 +485,6 @@ export default function HomePage() {
                 </div>
                 <div className="p-4 pl-0">
                   <span className="text-3xl border-l-8 border-red-500 text-red-600 pl-2">
-                    {/* {checkoutTime || "--:--"} */}
                     {formatTime(checkoutTime)}
                   </span>
                 </div>
@@ -567,8 +534,8 @@ export default function HomePage() {
             <MainDock />
           )}
           {isInside
-            ? InsideGeofence(currentGeofence?.name)
-            : OutsideGeofence(currentGeofence?.name)}
+            ? InsideGeofence(currentGeofence?.name || nearestLocations[0]?.name)
+            : OutsideGeofence(currentGeofence?.name || nearestLocations[0]?.name)}
         </div>
       )}
     </div>
