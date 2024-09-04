@@ -15,6 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className="">
         <head>
           <link rel="icon" href="/favicon.svg" />
+          <link rel="manifest" href="/manifest.json" />
         </head>
       <SessionWrapper>
         <body className={inter.className}>{children}</body>
