@@ -287,6 +287,7 @@ export default function HomePage() {
       await handleCheckOut();
     } else if (currentGeofence) {
       await handleCheckIn();
+      handleRefresh();
     } else {
       alert("Your request will be reviewed by the admin.");
     }
