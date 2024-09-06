@@ -16,5 +16,7 @@ export default withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  // Additional PWA configuration options
+  fallbacks: {
+    document: '/offline.html',
+  },
 })(nextConfig);

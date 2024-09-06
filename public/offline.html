@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline Location Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      h1 {
+        color: #333;
+      }
+      .status {
+        margin: 20px 0;
+        padding: 10px;
+        font-size: 18px;
+      }
+      .geofence-status {
+        margin-top: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin: 10px;
+      }
+      #map {
+        width: 100%;
+        height: 300px;
+        background-color: #ccc;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Offline Check-in/Check-out</h1>
+
+    <div class="status">
+      <p><strong>Current Location:</strong> <span id="location"></span></p>
+      <p id="geofenceStatus"></p>
+      <button id="checkInBtn">Check In</button>
+      <button id="checkOutBtn">Check Out</button>
+    </div>
+
+    <h2>Stored Check-ins/Check-outs</h2>
+    <ul id="history"></ul>
+
+    <script>
+      const geofences = [
+        {
+          _id: {
+            $oid: "66cad4e0aa7d74b7fc304c85",
+          },
+          id: 9,
+          name: "Miet Campus",
+          lat: 28.974401,
+          lon: 77.638944,
+          radius: 500,
+          color: "yellow",
+        },
+        {
+          _id: {
+            $oid: "66cad923972da2dc719e41d2",
+          },
+          id: 1,
+          name: "Mars Resort",
+          lat: 28.962149,
+          lon: 77.639927,
+          radius: 150,
+          color: "#33FF57",
+        },
+        {
+          _id: {
+            $oid: "66d2aaf6a2418abb70411d13",
+          },
+          name: "Home",
+          lat: 28.9818,
+          lon: 77.734388,
+          radius: 200,
+          color: "blue",
+        },
+        {
+          _id: {
+            $oid: "66d2cf84a2418abb70411d1a",
+          },
+          name: "Ayush ka Ghar",
+          lat: 28.97811,
+          lon: 77.73581,
+          radius: 200,
+          color: "green",
+          id: 69,
+        },
+        {
+          _id: {
+            $oid: "66d5f45b03de70d3a53c67ae",
+          },
+          name: "Suryansh ka Ghar",
+          lat: 29.063011,
+          lon: 77.719287,
+          radius: 200,
+          color: "pink",
+          id: 6969,
+        },
+        {
+          _id: {
+            $oid: "66db15de2e1924077daa0a96",
+          },
+          name: "AICTE Idea Lab",
+          lat: 28.973062,
+          lon: 77.640692,
+          radius: 80,
+          color: "green",
+          id: 99,
+        },
+        {
+          _id: {
+            $oid: "66db17012e1924077daa0a97",
+          },
+          name: "MIET Auditorium",
+          lat: 28.97411,
+          lon: 77.640511,
+          radius: 70,
+          color: "red",
+          id: 89,
+        },
+      ];
+
+      let currentPosition = null;
+      let nearestSite = null;
+
+      function toRadians(degrees) {
+        return degrees * (Math.PI / 180);
+      }
+
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Earth’s radius in meters
+        const φ1 = toRadians(lat1);
+        const φ2 = toRadians(lat2);
+        const Δφ = toRadians(lat2 - lat1);
+        const Δλ = toRadians(lon2 - lon1);
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Distance in meters
+      }
+
+      function updateLocationStatus() {
+        if (!currentPosition) return;
+
+        const { latitude, longitude } = currentPosition.coords;
+        document.getElementById(
+          "location"
+        ).innerText = `${latitude}, ${longitude}`;
+
+        let insideGeofence = false;
+        let minDistance = Infinity;
+
+        geofences.forEach((site) => {
+          const distance = calculateDistance(
+            latitude,
+            longitude,
+            site.lat,
+            site.lon
+          );
+          if (distance < minDistance) {
+            nearestSite = site;
+            minDistance = distance;
+          }
+          if (distance <= site.radius) {
+            insideGeofence = true;
+          }
+        });
+
+        const geofenceStatus = document.getElementById("geofenceStatus");
+        if (insideGeofence) {
+          geofenceStatus.innerText = `Inside geofenced area, nearest site is ${nearestSite.name}`;
+        } else {
+          geofenceStatus.innerText = `Outside of geofenced area, nearest site is ${nearestSite.name}`;
+        }
+      }
+
+      function storeCheckInOut(type) {
+        const { latitude, longitude } = currentPosition.coords;
+        const timestamp = new Date().toISOString();
+        const data = {
+          type,
+          latitude,
+          longitude,
+          site: nearestSite.name,
+          timestamp,
+        };
+        const key = `${type}-${timestamp}-${nearestSite.name}`;
+        localStorage.setItem(key, JSON.stringify(data));
+        displayHistory();
+      }
+
+      function displayHistory() {
+        const historyList = document.getElementById("history");
+        historyList.innerHTML = "";
+        Object.keys(localStorage).forEach((key) => {
+          const item = JSON.parse(localStorage.getItem(key));
+          const listItem = document.createElement("li");
+          listItem.innerText = `${item.type} at ${item.site} (${
+            item.latitude
+          }, ${item.longitude}) on ${new Date(
+            item.timestamp
+          ).toLocaleString()}`;
+          historyList.appendChild(listItem);
+        });
+      }
+
+      document.getElementById("checkInBtn").addEventListener("click", () => {
+        storeCheckInOut("Check-In");
+      });
+
+      document.getElementById("checkOutBtn").addEventListener("click", () => {
+        storeCheckInOut("Check-Out");
+      });
+
+      navigator.geolocation.watchPosition(
+        (position) => {
+          currentPosition = position;
+          updateLocationStatus();
+        },
+        (error) => {
+          console.error("Error getting location", error);
+        },
+        { enableHighAccuracy: true, maximumAge: 0 }
+      );
+
+      // Load existing check-ins/check-outs from localStorage
+      displayHistory();
+    </script>
+  </body>
+</html>
