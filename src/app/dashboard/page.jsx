@@ -69,14 +69,16 @@ const DashboardPage = () => {
         <section className="w-full md:w-1/2 xl:w-1/3 p-4">
           <div className="bg-white rounded shadow p-4">
             <h2 className="text-2xl font-bold">Leaves</h2>
-            <p className="text-1xl font-bold text-yellow-500">
+            <ul className="text-1xl font-bold text-yellow-500">
               <li>22</li>
               <li>23</li>
               <li>16</li>
               <li>13</li>
               <li>25</li>
               <li>98</li>
-            </p>
+              <li>89</li>
+              <li>78</li>
+            </ul>
           </div>
         </section>
         <section className="w-full p-4">
@@ -89,6 +91,7 @@ const DashboardPage = () => {
                 <li> yaggy@adslabs.xyz-----------Employee </li>
                 <li>suryansh@adslabs.xyz--------Employee</li>
                 <li> shagun@adslabs.xyz----------Employee</li>
+
               </div>
             </div>
           </div>
