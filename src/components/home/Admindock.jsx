@@ -31,7 +31,7 @@ function AdminDock() {
             </Link>
         </DockIcon>
         <DockIcon className="bg-black/10 dark:bg-white/10 p-3">
-          <Link href={"/dashboard"}>
+          <Link href={"https://pagedone.io/storage/templates/HR-Management-Dashboard-Tailwind-CSS-Template-free-figma-file/HR-Management-Dashboard-Tailwind-CSS-Template-free-figma-file/index.html"}>
           <Icons.dashboard className="size-full" />
           </Link>
         </DockIcon>
