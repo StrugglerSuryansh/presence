@@ -82,7 +82,7 @@ export default function Home() {
                   Get Started
                 </Button>
               </Link>
-              <Link href={"/https://github.com/ads-labs/presence/releases/download/1.0.1/Presence.apk"}>
+              <Link href={"https://github.com/ads-labs/presence/releases/download/1.0.1/Presence.apk"}>
                 <Button className="mt-[1.6rem] bg-blue-500 hover:!bg-blue-700 ml-2">
                   Download App
                 </Button>

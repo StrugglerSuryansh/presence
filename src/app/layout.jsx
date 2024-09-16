@@ -13,10 +13,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="">
-        <head>
-          <link rel="icon" href="/favicon.svg" />
-          <link rel="manifest" href="/manifest.json" />
-        </head>
+      <head>
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="dbd39033-d585-462e-9537-090eab3d8538"
+        ></script>
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <SessionWrapper>
         <body className={inter.className}>{children}</body>
       </SessionWrapper>
